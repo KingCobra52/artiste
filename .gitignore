@@ -1,0 +1,4 @@
+.env
+artiste.db
+__pycache__/
+*.pyc
