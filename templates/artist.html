@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ artist["name"] }}</title>
+</head>
+<body>
+    <a href="/">← Back to market</a>
+    <h1>{{ artist["name"] }}</h1>
+    <p>Tier: {{ artist["tier"] }}</p>
+    <p>Listeners: {{ "{:,}".format(artist["listeners"]) }}</p>
+    <p>Playcount: {{ "{:,}".format(artist["playcount"]) }}</p>
+    <p>Last updated: {{ artist["date"] }}</p>
+</body>
+</html>

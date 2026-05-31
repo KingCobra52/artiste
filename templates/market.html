@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Artiste</title>
+</head>
+<body>
+    <h1>Market</h1>
+    <table>
+        <tr>
+            <th>Artist</th>
+            <th>Listeners</th>
+            <th>Playcount</th>
+            <th>Date</th>
+            <th>Tier</th>
+        </tr>
+        {% for artist in artists %}
+        <tr>
+            <td><a href="/artist/{{ artist['name'] }}">{{ artist["name"] }}</a></td>
+            <td>{{ "{:,}".format(artist["listeners"]) }}</td>
+            <td>{{ "{:,}".format(artist["playcount"]) }}</td>
+            <td>{{ artist["date"] }}</td>
+            <td>{{ artist["tier"] }}</td>
+            <!-- fill in the rest -->
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
