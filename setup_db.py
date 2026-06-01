@@ -23,5 +23,15 @@ cursor.execute("""
     )
 """)
 
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        username TEXT, 
+        email TEXT,
+        hashed_password TEXT,
+        bars INTEGER DEFAULT 10000
+    )
+""")
+
 conn.commit()
 conn.close()
