@@ -87,7 +87,67 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("market"))
-        
+
+@app.route("/buy", methods=["POST"])
+@login_required
+def buy():
+    db = get_db()
+    artist_id = request.form.get('artist_id')
+    shares = int(request.form.get('shares'))
+    artist_name = request.form.get('name')
+    query = "SELECT artist_id, listeners FROM artist_snapshots WHERE artist_id = ?"
+
+    artist_row = db.execute(query, (artist_id,)).fetchone()
+    listeners = artist_row["listeners"]
+    price_per_share = listeners / 10000
+    total_cost = price_per_share * shares 
+
+    if current_user.bars >= total_cost:
+        db.execute("UPDATE users SET bars = ? WHERE id = ?", (current_user.bars - total_cost, current_user.id))
+    else:
+        return "Not a sufficient amount of bars"
+
+    insert_query = "INSERT INTO holdings (user_id, artist_id, shares, bought_at) VALUES (?, ?, ?, ?, date('now'))"
+    db.execute(insert_query, (current_user.id, artist_id, shares, price_per_share))
+    db.commit()
+    return redirect(url_for("artist", name=artist_name))
+
+@app.route("/portfolio")
+@login_required
+def portfolio():
+    db = get_db()
+    
+    query = """
+        SELECT 
+            artists.name,
+            holdings.shares,
+            holdings.price_per_share,
+            holdings.bought_at,
+            artist_snapshots.listeners
+        FROM holdings
+        JOIN artists ON artists.id = holdings.artist_id
+        JOIN artist_snapshots ON artist_snapshots.artist_id = holdings.artist_id
+        WHERE holdings.user_id = ?
+          AND artist_snapshots.date = (SELECT MAX(date) FROM artist_snapshots WHERE artist_id = artists.id)
+    """
+    
+    # You have to execute the query against the database and save it to the `raw_holdings` variable
+    raw_holdings = db.execute(query, (current_user.id,)).fetchall()
+    
+    # Now we loop through the raw data to calculate the values in Python
+    holdings = []
+    for row in raw_holdings:
+        holding = dict(row)
+
+        current_price = holding['listeners'] / 10000
+        holding['current_price'] = current_price
+        holding['current_value'] = current_price * holding['shares']
+        holding['gain_loss'] = (current_price - holding['price_per_share']) * holding['shares']
+
+        holdings.append(holding)
+
+    # Finally, pass the calculated `holdings` list to the template
+    return render_template("portfolio.html", holdings=holdings)
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -10,5 +10,13 @@
     <p>Listeners: {{ "{:,}".format(artist["listeners"]) }}</p>
     <p>Playcount: {{ "{:,}".format(artist["playcount"]) }}</p>
     <p>Last updated: {{ artist["date"] }}</p>
+
+    <form method="POST" action="/buy">
+    <input type="hidden" name="artist_id" value="{{ artist['artist_id'] }}">
+    <input type="hidden" name="name" value="{{ artist['name'] }}">
+    <label>Shares:</label>
+    <input type="number" name="shares" min="1" value="1">
+    <button type="submit">Buy</button>
+</form>
 </body>
 </html>

@@ -33,5 +33,16 @@ cursor.execute("""
     )
 """)
 
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS holdings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER REFERENCES users(id),
+        artist_id INTEGER REFERENCES artists(id), 
+        shares INTEGER,
+        price_per_share FLOAT, 
+        bought_at DATE 
+    )
+""")
+
 conn.commit()
 conn.close()
