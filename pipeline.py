@@ -1,4 +1,4 @@
-import sqlite3
+import psycopg2
 import requests 
 import os 
 from dotenv import load_dotenv 
@@ -28,7 +28,7 @@ params = {
 
 if __name__ == "__main__":
 
-    conn = sqlite3.connect("artiste.db")
+    conn = psycopg2.connect(os.getenv("DATABASE_URL"))
     cursor = conn.cursor()
 
     for artist in artists:
@@ -42,14 +42,14 @@ if __name__ == "__main__":
 
 
         #starting db stuff 
-        query = f"SELECT EXISTS(SELECT 1 FROM artists WHERE name = ?)"
+        query = f"SELECT EXISTS(SELECT 1 FROM artists WHERE name = %s)"
         cursor.execute(query, (artist,))
 
         #fetch result as 0 or 1 
         exists = cursor.fetchone()[0]
 
         if exists:
-            query = f"SELECT id FROM artists WHERE name = ?"
+            query = f"SELECT id FROM artists WHERE name = %s"
             cursor.execute(query, (artist,))
             artist_id = cursor.fetchone()[0]
 
@@ -57,17 +57,18 @@ if __name__ == "__main__":
             #insert artist into the artists table 
             new_user = (artist,)
             cursor.execute(
-                'INSERT INTO artists (name) VALUES (?)',
+                'INSERT INTO artists (name) VALUES (%s) RETURNING id',
                 new_user
             )
 
             #get the artist id -> write it to artist_snapshots 
-            artist_id = cursor.lastrowid
+            artist_id = cursor.fetchone()[0]
 
-        snapshot_exists = cursor.execute(
-            "SELECT EXISTS(SELECT 1 FROM artist_snapshots WHERE artist_id = ? AND date = ?)",
+        cursor.execute(
+            "SELECT EXISTS(SELECT 1 FROM artist_snapshots WHERE artist_id = %s AND date = %s)",
             (artist_id, today)
-        ).fetchone()[0]
+        )
+        snapshot_exists = cursor.fetchone()[0]
 
         if snapshot_exists:
             print(f"Snapshot already exists for {artist}, skipping.")
@@ -76,7 +77,7 @@ if __name__ == "__main__":
             playcount = data["artist"]["stats"]["playcount"]
             new_id = (artist_id, listeners, playcount, today)
             cursor.execute(
-                'INSERT INTO artist_snapshots (artist_id, listeners, playcount, date) VALUES (?, ?, ?, ?)',
+                'INSERT INTO artist_snapshots (artist_id, listeners, playcount, date) VALUES (%s, %s, %s, %s)',
                 new_id
             )
             print(f"Inserted snapshot for {artist} with artist_id {artist_id}")

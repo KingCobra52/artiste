@@ -1,21 +1,29 @@
-import sqlite3
+import os 
+from dotenv import load_dotenv 
+import psycopg2
 
-conn = sqlite3.connect("artiste.db") #creates the sqlite schema file
+load_dotenv()
+
+DATABASE_URL_IPV4 = os.getenv("DATABASE_URL_IPV4")
+DATABASE_URL_IPV6 = os.getenv("DATABASE_URL_IPV6")
+
+conn = psycopg2.connect(DATABASE_URL_IPV4) #creates the postgres schema 
 cursor = conn.cursor()
 
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS artists (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         name TEXT,  
         spotify_id TEXT, 
         genre TEXT,
-        image_url TEXT
+        image_url TEXT,
+        tier TEXT
     )
 """)
 
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS artist_snapshots (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        id SERIAL PRIMARY KEY, 
         artist_id INTEGER REFERENCES artists(id),
         listeners INTEGER, 
         playcount INTEGER,
@@ -25,7 +33,7 @@ cursor.execute("""
 
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        id SERIAL PRIMARY KEY, 
         username TEXT, 
         email TEXT,
         hashed_password TEXT,
@@ -35,7 +43,7 @@ cursor.execute("""
 
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS holdings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_id INTEGER REFERENCES users(id),
         artist_id INTEGER REFERENCES artists(id), 
         shares INTEGER,
