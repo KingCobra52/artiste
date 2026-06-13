@@ -12,11 +12,19 @@
     <p>Last updated: {{ artist["date"] }}</p>
 
     <form method="POST" action="/buy">
-    <input type="hidden" name="artist_id" value="{{ artist['artist_id'] }}">
-    <input type="hidden" name="name" value="{{ artist['name'] }}">
-    <label>Shares:</label>
-    <input type="number" name="shares" min="1" value="1">
-    <button type="submit">Buy</button>
-</form>
+        <input type="hidden" name="artist_id" value="{{ artist['artist_id'] }}">
+        <input type="hidden" name="name" value="{{ artist['name'] }}">
+        <label>Shares:</label>
+        <input type="number" name="shares" min="1" value="1">
+        <button type="submit">Buy</button>
+    </form>
+
+    <form method="POST" action="/sell">
+        <input type="hidden" name="artist_id" value="{{ artist['artist_id'] }}">
+        <input type="hidden" name="name" value="{{ artist['name'] }}">
+        <label>Shares to sell:</label>
+        <input type="number" name="shares" min="1" value="1">
+        <button type="submit">Sell</button>
+    </form>
 </body>
 </html>

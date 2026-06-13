@@ -131,6 +131,59 @@ def buy():
     db.commit()
     return redirect(url_for("artist", name=artist_name))
 
+@app.route("/sell", methods=["POST"])
+@login_required
+def sell():
+    db = get_db()
+    artist_id = request.form.get('artist_id')
+    artist_name = request.form.get('name')
+    shares_to_sell = int(request.form.get('shares'))
+
+    # Get current price from the latest snapshot (same formula as buy)
+    snapshot = db.execute(
+        "SELECT listeners FROM artist_snapshots WHERE artist_id = %s ORDER BY date DESC LIMIT 1",
+        (artist_id,)
+    ).fetchone()
+    current_price = snapshot["listeners"] / 10000
+
+    # Get total shares the user owns for this artist
+    holdings = db.execute(
+        "SELECT id, shares, price_per_share FROM holdings WHERE user_id = %s AND artist_id = %s",
+        (current_user.id, artist_id)
+    ).fetchall()
+    total_shares_owned = sum(row["shares"] for row in holdings)
+
+    if shares_to_sell <= 0 or shares_to_sell > total_shares_owned:
+        return "Invalid number of shares to sell"
+
+    # Credit the user with current market value of the sold shares
+    payout = current_price * shares_to_sell
+    db.execute(
+        "UPDATE users SET bars = bars + %s WHERE id = %s",
+        (payout, current_user.id)
+    )
+
+    # Delete all holdings rows for this artist, then re-insert remaining shares
+    # (preserving original avg price_per_share weighted average)
+    remaining = total_shares_owned - shares_to_sell
+    db.execute(
+        "DELETE FROM holdings WHERE user_id = %s AND artist_id = %s",
+        (current_user.id, artist_id)
+    )
+    if remaining > 0:
+        # Compute weighted average buy price from original holdings
+        total_cost = sum(row["shares"] * row["price_per_share"] for row in holdings)
+        avg_price = total_cost / total_shares_owned
+        db.execute(
+            "INSERT INTO holdings (user_id, artist_id, shares, price_per_share, bought_at) VALUES (%s, %s, %s, %s, CURRENT_DATE)",
+            (current_user.id, artist_id, remaining, avg_price)
+        )
+
+    db.commit()
+    return redirect(url_for("artist", name=artist_name))
+
+
+
 @app.route("/portfolio")
 @login_required
 def portfolio():
