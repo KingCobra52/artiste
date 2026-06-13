@@ -66,7 +66,17 @@ def artist(name):
     query = "SELECT * FROM artist_snapshots JOIN artists ON artists.id = artist_snapshots.artist_id WHERE artists.name = %s ORDER BY artist_snapshots.date DESC LIMIT 1"
     db = get_db()
     artist = db.execute(query, (name, )).fetchone()
-    return render_template("artist.html", artist=artist)
+
+    shares_owned = 0
+    if current_user.is_authenticated:
+        holdings = db.execute(
+            "SELECT SUM(shares) as total FROM holdings WHERE user_id = %s AND artist_id = %s",
+            (current_user.id, artist["id"])
+        ).fetchone()
+        if holdings and holdings["total"]:
+            shares_owned = holdings["total"]
+
+    return render_template("artist.html", artist=artist, shares_owned=shares_owned)
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():

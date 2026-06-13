@@ -19,12 +19,18 @@
         <button type="submit">Buy</button>
     </form>
 
-    <form method="POST" action="/sell">
-        <input type="hidden" name="artist_id" value="{{ artist['artist_id'] }}">
-        <input type="hidden" name="name" value="{{ artist['name'] }}">
-        <label>Shares to sell:</label>
-        <input type="number" name="shares" min="1" value="1">
-        <button type="submit">Sell</button>
-    </form>
+    {% if current_user.is_authenticated %}
+        <p>You own: <strong>{{ shares_owned }}</strong> share{{ 's' if shares_owned != 1 else '' }}</p>
+
+        {% if shares_owned > 0 %}
+        <form method="POST" action="/sell">
+            <input type="hidden" name="artist_id" value="{{ artist['artist_id'] }}">
+            <input type="hidden" name="name" value="{{ artist['name'] }}">
+            <label>Shares to sell:</label>
+            <input type="number" name="shares" min="1" max="{{ shares_owned }}" value="1">
+            <button type="submit">Sell</button>
+        </form>
+        {% endif %}
+    {% endif %}
 </body>
 </html>
