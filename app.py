@@ -71,7 +71,7 @@ def artist(name):
     if current_user.is_authenticated:
         holdings = db.execute(
             "SELECT SUM(shares) as total FROM holdings WHERE user_id = %s AND artist_id = %s",
-            (current_user.id, artist["id"])
+            (current_user.id, artist_snapshots.artist_id)
         ).fetchone()
         if holdings and holdings["total"]:
             shares_owned = holdings["total"]
