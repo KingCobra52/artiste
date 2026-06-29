@@ -156,9 +156,9 @@ def sell():
     ).fetchone()
     current_price = snapshot["listeners"] / 10000
 
-    # Get total shares the user owns for this artist
+    # Get total shares the user owns for this artist (ordered oldest first)
     holdings = db.execute(
-        "SELECT id, shares, price_per_share FROM holdings WHERE user_id = %s AND artist_id = %s",
+        "SELECT id, shares, price_per_share FROM holdings WHERE user_id = %s AND artist_id = %s ORDER BY id ASC",
         (current_user.id, artist_id)
     ).fetchall()
     total_shares_owned = sum(row["shares"] for row in holdings)
@@ -173,22 +173,21 @@ def sell():
         (payout, current_user.id)
     )
 
-    # Delete all holdings rows for this artist, then re-insert remaining shares
-    # (preserving original avg price_per_share weighted average)
-    remaining = total_shares_owned - shares_to_sell
-    db.execute(
-        "DELETE FROM holdings WHERE user_id = %s AND artist_id = %s",
-        (current_user.id, artist_id)
-    )
-    if remaining > 0:
-        # Compute weighted average buy price from original holdings
-        total_cost = sum(row["shares"] * row["price_per_share"] for row in holdings)
-        avg_price = total_cost / total_shares_owned
-        db.execute(
-            "INSERT INTO holdings (user_id, artist_id, shares, price_per_share, bought_at) VALUES (%s, %s, %s, %s, CURRENT_DATE)",
-            (current_user.id, artist_id, remaining, avg_price)
-        )
-
+    # Process FIFO deduction
+    shares_left = shares_to_sell
+    for row in holdings:
+        if shares_left <= 0:
+            break
+        if row["shares"] <= shares_left:
+            # Delete this holding as all its shares are sold
+            db.execute("DELETE FROM holdings WHERE id = %s", (row["id"],))
+            shares_left -= row["shares"]
+        else:
+            # Update this holding to reflect remaining shares
+            db.execute("UPDATE holdings SET shares = shares - %s WHERE id = %s", (shares_left, row["id"]))
+            shares_left = 0
+            break
+   
     db.commit()
     return redirect(url_for("artist", name=artist_name))
 
