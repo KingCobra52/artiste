@@ -1,35 +1,55 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %}
 
-<head>
-    <title>Artiste</title>
-</head>
+{% block title %}Market - Artiste{% endblock %}
 
-<body>
-    <div style="margin-bottom: 15px;">
-        <a href="/portfolio">→ View My Portfolio</a>
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h1>Market</h1>
+        <span style="font-size: 0.9rem; color: var(--text-secondary);">
+            {{ artists|length }} Artists Listed
+        </span>
     </div>
-    <h1>Market</h1>
-    <table>
-        <tr>
-            <th>Artist</th>
-            <th>Listeners</th>
-            <th>Playcount</th>
-            <th>Date</th>
-            <th>Tier</th>
-        </tr>
-        {% for artist in artists %}
-        <tr>
-            <td><a href="/artist/{{ artist['name'] }}">{{ artist["name"] }}</a></td>
-            <td>{{ "{:,}".format(artist["listeners"]) }}</td>
-            <td>{{ "{:,}".format(artist["playcount"]) }}</td>
-            <td>{{ artist["date"] }}</td>
-            <td>{{ artist["tier"] }}</td>
-            <!-- fill in the rest -->
-        </tr>
-        {% endfor %}
-    </table>
-    <a href="/logout">Logout</a>
-</body>
 
-</html>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Artist</th>
+                    <th>Listeners</th>
+                    <th>Playcount</th>
+                    <th>Last Updated</th>
+                    <th>Tier</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for artist in artists %}
+                <tr>
+                    <td style="font-weight: 500;">
+                        <a href="/artist/{{ artist['name'] }}">{{ artist["name"] }}</a>
+                    </td>
+                    <td>{{ "{:,}".format(artist["listeners"]) }}</td>
+                    <td style="color: var(--text-secondary);">{{ "{:,}".format(artist["playcount"]) }}</td>
+                    <td style="color: var(--text-secondary); font-size: 0.85rem;">{{ artist["date"] }}</td>
+                    <td>
+                        {% if artist["tier"] == "Established" %}
+                            <span style="background: rgba(139, 92, 246, 0.15); color: #a78bfa; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                                Established
+                            </span>
+                        {% elif artist["tier"] == "Rising" %}
+                            <span style="background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                                Rising
+                            </span>
+                        {% else %}
+                            <span style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                                {{ artist["tier"] or "Breaking" }}
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

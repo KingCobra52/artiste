@@ -1,47 +1,67 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>My Portfolio</title>
-    <style>
-        .positive { color: green; }
-        .negative { color: red; }
-    </style>
-</head>
-<body>
-    <a href="/">← Back to market</a>
-    <h1>My Portfolio</h1>
-    
-    <table border="1" cellpadding="5" style="border-collapse: collapse;">
-        <thead>
-            <tr>
-                <th>Artist Name</th>
-                <th>Shares</th>
-                <th>Buy Price (bars/share)</th>
-                <th>Current Price (bars/share)</th>
-                <th>Current Value (bars)</th>
-                <th>Gain / Loss (bars)</th>
-                <th>Date Bought</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for holding in holdings %}
-            <tr>
-                <td>{{ holding.name }}</td>
-                <td>{{ holding.shares }}</td>
-                <td>{{ "{:,.2f}".format(holding.price_per_share) }}</td>
-                <td>{{ "{:,.2f}".format(holding.current_price) }}</td>
-                <td>{{ "{:,.2f}".format(holding.current_value) }}</td>
-                <td class="{{ 'positive' if holding.gain_loss >= 0 else 'negative' }}">
-                {{ "+" if holding.gain_loss > 0 else "" }}{{ "{:,.2f}".format(holding.gain_loss) }}
-                </td>
-                <td>{{ holding.bought_at }}</td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="7">You don't own any shares yet! Go buy some artists.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}My Portfolio - Artiste{% endblock %}
+
+{% block extra_head %}
+<style>
+    .pos-val {
+        color: var(--success);
+        font-weight: 600;
+    }
+    .neg-val {
+        color: var(--danger);
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h1>My Portfolio</h1>
+        <span style="font-size: 0.95rem; background: rgba(255,255,255,0.03); padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--border-color);">
+            Balance: <strong style="color: var(--success);">{{ "{:,.2f}".format(current_user.bars) }} Bars</strong>
+        </span>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Artist Name</th>
+                    <th>Shares Owned</th>
+                    <th>Avg Buy Price</th>
+                    <th>Current Price</th>
+                    <th>Current Value</th>
+                    <th>Gain / Loss</th>
+                    <th>Date Bought</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for holding in holdings %}
+                <tr>
+                    <td style="font-weight: 500;">
+                        <a href="/artist/{{ holding.name }}">{{ holding.name }}</a>
+                    </td>
+                    <td>{{ holding.shares }}</td>
+                    <td style="color: var(--text-secondary);">{{ "{:,.2f}".format(holding.price_per_share) }} Bars</td>
+                    <td style="color: var(--text-secondary);">{{ "{:,.2f}".format(holding.current_price) }} Bars</td>
+                    <td style="font-weight: 500;">{{ "{:,.2f}".format(holding.current_value) }} Bars</td>
+                    <td class="{{ 'pos-val' if holding.gain_loss >= 0 else 'neg-val' }}">
+                        {{ "+" if holding.gain_loss > 0 else "" }}{{ "{:,.2f}".format(holding.gain_loss) }} Bars
+                    </td>
+                    <td style="color: var(--text-secondary); font-size: 0.85rem;">{{ holding.bought_at }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 3rem 1rem;">
+                        <p style="margin-bottom: 1rem;">You don't own any shares yet!</p>
+                        <a href="/" class="btn btn-primary">Go to Market</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

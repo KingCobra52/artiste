@@ -1,6 +1,10 @@
-import sqlite3
+import os
+import psycopg2
+from dotenv import load_dotenv
 
-conn = sqlite3.connect("artiste.db")
+load_dotenv()
+
+conn = psycopg2.connect(os.getenv("DATABASE_URL"))
 cursor = conn.cursor()
 
 established_a = ["Drake", "Travis Scott", "Future", "Kendrick Lamar", "J. Cole", "Lil Baby"]
@@ -26,7 +30,7 @@ breaking_a = ["JID",
     "Kae",
     "Baby Keem"]
 
-query = "UPDATE artists SET tier = ? WHERE name = ?"
+query = "UPDATE artists SET tier = %s WHERE name = %s"
 
 for artist in established_a:
     cursor.execute(query, ("Established", artist))

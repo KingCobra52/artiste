@@ -1,36 +1,113 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ artist["name"] }}</title>
-</head>
-<body>
-    <a href="/">← Back to market</a>
-    <h1>{{ artist["name"] }}</h1>
-    <p>Tier: {{ artist["tier"] }}</p>
-    <p>Listeners: {{ "{:,}".format(artist["listeners"]) }}</p>
-    <p>Playcount: {{ "{:,}".format(artist["playcount"]) }}</p>
-    <p>Last updated: {{ artist["date"] }}</p>
+{% extends "base.html" %}
 
-    <form method="POST" action="/buy">
-        <input type="hidden" name="artist_id" value="{{ artist['artist_id'] }}">
-        <input type="hidden" name="name" value="{{ artist['name'] }}">
-        <label>Shares:</label>
-        <input type="number" name="shares" min="1" value="1">
-        <button type="submit">Buy</button>
-    </form>
+{% block title %}{{ artist["name"] }} - Artiste{% endblock %}
 
-    {% if current_user.is_authenticated %}
-        <p>You own: <strong>{{ shares_owned }}</strong> share{{ 's' if shares_owned != 1 else '' }}</p>
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="/" style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 500;">
+        &larr; Back to Market
+    </a>
+</div>
 
-        {% if shares_owned > 0 %}
-        <form method="POST" action="/sell">
-            <input type="hidden" name="artist_id" value="{{ artist['artist_id'] }}">
-            <input type="hidden" name="name" value="{{ artist['name'] }}">
-            <label>Shares to sell:</label>
-            <input type="number" name="shares" min="1" max="{{ shares_owned }}" value="1">
-            <button type="submit">Sell</button>
-        </form>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">
+    
+    <!-- Artist Stats Card -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h1 style="margin: 0;">{{ artist["name"] }}</h1>
+            {% if artist["tier"] == "Established" %}
+                <span style="background: rgba(139, 92, 246, 0.15); color: #a78bfa; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                    Established
+                </span>
+            {% elif artist["tier"] == "Rising" %}
+                <span style="background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                    Rising
+                </span>
+            {% else %}
+                <span style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                    {{ artist["tier"] or "Breaking" }}
+                </span>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Monthly Listeners</span>
+                <span style="font-weight: 600; font-size: 1.1rem;">{{ "{:,}".format(artist["listeners"]) }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Playcount</span>
+                <span style="font-weight: 600; font-size: 1.1rem;">{{ "{:,}".format(artist["playcount"]) }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Market Share Price</span>
+                <span style="font-weight: 600; font-size: 1.1rem; color: var(--success);">
+                    {{ "{:,.2f}".format(artist["listeners"] / 10000) }} Bars
+                </span>
+            </div>
+        </div>
+
+        <div style="font-size: 0.85rem; color: var(--text-secondary); display: flex; justify-content: space-between;">
+            <span>Last Updated</span>
+            <span>{{ artist["date"] }}</span>
+        </div>
+    </div>
+
+    <!-- Trade / Operations Card -->
+    <div class="card">
+        <h2 style="font-size: 1.4rem; margin-bottom: 1.5rem; font-weight: 600;">Trading Desk</h2>
+
+        {% if current_user.is_authenticated %}
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Your Holdings</div>
+                    <div style="font-size: 1.25rem; font-weight: 700; color: #fff;">{{ shares_owned }} Shares</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Estimated Value</div>
+                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--success);">
+                        {{ "{:,.2f}".format(shares_owned * (artist["listeners"] / 10000)) }} Bars
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buy Action -->
+            <form method="POST" action="/buy" style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color);">
+                <input type="hidden" name="artist_id" value="{{ artist['artist_id'] }}">
+                <input type="hidden" name="name" value="{{ artist['name'] }}">
+                
+                <div class="form-group">
+                    <label for="buy-shares">Buy Shares</label>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <input type="number" id="buy-shares" name="shares" min="1" value="1" class="form-control" style="flex: 1;">
+                        <button type="submit" class="btn btn-primary" style="padding: 0 1.5rem; background: var(--success);">Buy</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Sell Action -->
+            {% if shares_owned > 0 %}
+            <form method="POST" action="/sell">
+                <input type="hidden" name="artist_id" value="{{ artist['artist_id'] }}">
+                <input type="hidden" name="name" value="{{ artist['name'] }}">
+                
+                <div class="form-group">
+                    <label for="sell-shares">Sell Shares</label>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <input type="number" id="sell-shares" name="shares" min="1" max="{{ shares_owned }}" value="1" class="form-control" style="flex: 1;">
+                        <button type="submit" class="btn btn-primary" style="padding: 0 1.5rem; background: var(--danger);">Sell</button>
+                    </div>
+                </div>
+            </form>
+            {% endif %}
+
+        {% else %}
+            <div style="text-align: center; padding: 2rem 1rem;">
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Please log in to trade shares of this artist.</p>
+                <a href="/login" class="btn btn-primary" style="width: 100%;">Log In to Artiste</a>
+            </div>
         {% endif %}
-    {% endif %}
-</body>
-</html>
+    </div>
+
+</div>
+{% endblock %}
