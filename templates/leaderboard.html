@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard - Artiste{% endblock %}
+
+{% block extra_head %}
+<style>
+    .rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+    .rank-1 {
+        background-color: #fbbf24;
+        color: #0b0b0f;
+        box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+    }
+    .rank-2 {
+        background-color: #cbd5e1;
+        color: #0b0b0f;
+        box-shadow: 0 0 10px rgba(203, 213, 225, 0.4);
+    }
+    .rank-3 {
+        background-color: #b45309;
+        color: #fff;
+        box-shadow: 0 0 10px rgba(180, 83, 9, 0.4);
+    }
+    .rank-other {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h1 style="margin-bottom: 0.5rem; background: linear-gradient(135deg, #a78bfa, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Global Leaderboard</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">Ranked by total portfolio holdings value at current market prices</p>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 80px; text-align: center;">Rank</th>
+                    <th>Username</th>
+                    <th style="text-align: right;">Total Portfolio Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for leader in leaders %}
+                <tr>
+                    <td style="text-align: center; vertical-align: middle;">
+                        {% if loop.index == 1 %}
+                            <span class="rank-badge rank-1">1</span>
+                        {% elif loop.index == 2 %}
+                            <span class="rank-badge rank-2">2</span>
+                        {% elif loop.index == 3 %}
+                            <span class="rank-badge rank-3">3</span>
+                        {% else %}
+                            <span class="rank-badge rank-other">{{ loop.index }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-weight: 600; font-size: 1rem; vertical-align: middle;">
+                        {{ leader.username }}
+                        {% if current_user.is_authenticated and leader.username == current_user.username %}
+                            <span style="font-size: 0.75rem; background: rgba(139, 92, 246, 0.2); color: #c084fc; padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.5rem; font-weight: 500;">
+                                You
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right; font-weight: 700; color: var(--success); font-size: 1.05rem; vertical-align: middle;">
+                        {{ "{:,.2f}".format(leader.total_value) }} Bars
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" style="text-align: center; color: var(--text-secondary); padding: 3rem 1rem;">
+                        No players registered yet!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

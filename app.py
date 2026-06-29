@@ -231,5 +231,28 @@ def portfolio():
     # Finally, pass the calculated `holdings` list to the template
     return render_template("portfolio.html", holdings=holdings)
 
+@app.route("/leaderboard")
+def leaderboard():
+    db = get_db()
+    query = """
+        SELECT 
+            users.username,
+            COALESCE(SUM(holdings.shares * (artist_snapshots.listeners / 10000.0)), 0) AS total_value
+        FROM users
+        LEFT JOIN holdings ON holdings.user_id = users.id
+        LEFT JOIN artist_snapshots ON artist_snapshots.artist_id = holdings.artist_id
+            AND artist_snapshots.date = (
+                SELECT MAX(date) 
+                FROM artist_snapshots AS s2 
+                WHERE s2.artist_id = holdings.artist_id
+            )
+        GROUP BY users.id, users.username
+        ORDER BY total_value DESC
+    """
+    
+    leaders = db.execute(query).fetchall()
+    return render_template("leaderboard.html", leaders=leaders)
+
+
 if __name__ == "__main__":
     app.run(debug=True)
